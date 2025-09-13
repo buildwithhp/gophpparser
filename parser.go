@@ -83,6 +83,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(NAMESPACE_SEPARATOR, p.parseNamespacedIdentifier)
+	p.registerPrefix(QUESTION, p.parseTernaryOrNullable)
 
 	p.infixParseFns = make(map[TokenType]infixParseFn)
 	p.registerInfix(PLUS, p.parseInfixExpression)
@@ -163,6 +164,8 @@ func (p *Parser) parseStatement() Statement {
 		return p.parseNamespaceDeclaration()
 	case USE:
 		return p.parseUseStatement()
+	case DECLARE:
+		return p.parseDeclareStatement()
 	case TRY:
 		return p.parseTryStatement()
 	case THROW:
@@ -1429,18 +1432,75 @@ func (p *Parser) parseTernaryExpression(condition Expression) Expression {
 	return expr
 }
 
+func (p *Parser) parseDeclareStatement() Statement {
+	stmt := &DeclareStatement{
+		Token:      p.curToken,
+		Directives: make(map[string]Expression),
+	}
+
+	if !p.expectPeek(LPAREN) {
+		return nil
+	}
+
+	// Parse directives like strict_types=1
+	p.nextToken()
+	for !p.curTokenIs(RPAREN) && !p.curTokenIs(EOF) {
+		if !p.curTokenIs(IDENT) {
+			p.nextToken()
+			continue
+		}
+
+		directiveName := p.curToken.Literal
+
+		if !p.expectPeek(ASSIGN) {
+			return nil
+		}
+
+		p.nextToken()
+		stmt.Directives[directiveName] = p.parseExpression(LOWEST)
+
+		if p.peekTokenIs(COMMA) {
+			p.nextToken()
+		}
+		p.nextToken()
+	}
+
+	if !p.curTokenIs(RPAREN) {
+		return nil
+	}
+
+	// Check for body or just semicolon
+	if p.peekTokenIs(LBRACE) {
+		p.nextToken()
+		stmt.Body = p.parseBlockStatement()
+	} else if p.peekTokenIs(SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
 func (p *Parser) parseNamespacedIdentifier() Expression {
-	// Handle leading namespace separator like \Exception
+	// Handle leading namespace separator like \Exception or \define()
 	expr := &Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	
-	// If next token is an identifier, this is a global reference like \Exception
+	// If next token is an identifier, this is a global reference like \Exception or \define
 	if p.peekTokenIs(IDENT) {
 		p.nextToken()
 		expr.Value = "\\" + p.curToken.Literal
 		expr.Token = p.curToken
+		
+		// If this is followed by parentheses, it might be a function call
+		// The call expression parser will handle the parentheses
 	}
 	
 	return expr
+}
+
+func (p *Parser) parseTernaryOrNullable() Expression {
+	// For now, just return a basic identifier - this is a placeholder
+	// In a full implementation, this would handle nullable types (PHP 7+)
+	return &Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 

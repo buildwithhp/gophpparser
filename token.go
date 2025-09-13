@@ -134,6 +134,8 @@ const (
 	MAGIC_CONSTANT
 	// Arrow function
 	ARROW_FUNCTION // fn
+	// PHP 7+ features
+	DECLARE // declare
 )
 
 type Token struct {
@@ -199,6 +201,7 @@ var keywords = map[string]TokenType{
 	"include_once": INCLUDE_ONCE,
 	"require_once": REQUIRE_ONCE,
 	"fn":           ARROW_FUNCTION,
+	"declare":      DECLARE,
 }
 
 func LookupIdent(ident string) TokenType {
@@ -364,6 +367,8 @@ func (t TokenType) String() string {
 		return "MAGIC_CONSTANT"
 	case ARROW_FUNCTION:
 		return "ARROW_FUNCTION"
+	case DECLARE:
+		return "DECLARE"
 	default:
 		return fmt.Sprintf("KEYWORD(%d)", t)
 	}

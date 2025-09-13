@@ -844,6 +844,34 @@ func (te *TernaryExpression) String() string {
 }
 func (te *TernaryExpression) Type() string { return "TernaryExpression" }
 
+type DeclareStatement struct {
+	Token      Token                    `json:"token"`
+	Directives map[string]Expression    `json:"directives"`
+	Body       *BlockStatement          `json:"body,omitempty"`
+}
+
+func (ds *DeclareStatement) statementNode()       {}
+func (ds *DeclareStatement) TokenLiteral() string { return ds.Token.Literal }
+func (ds *DeclareStatement) String() string {
+	out := "declare("
+	first := true
+	for key, value := range ds.Directives {
+		if !first {
+			out += ", "
+		}
+		out += key + "=" + value.String()
+		first = false
+	}
+	out += ")"
+	if ds.Body != nil {
+		out += " " + ds.Body.String()
+	} else {
+		out += ";"
+	}
+	return out
+}
+func (ds *DeclareStatement) Type() string { return "DeclareStatement" }
+
 func ToJSON(node Node) ([]byte, error) {
 	data := map[string]any{
 		"type": node.Type(),
@@ -1026,6 +1054,11 @@ func ToJSON(node Node) ([]byte, error) {
 		data["condition"] = n.Condition
 		data["true_value"] = n.TrueValue
 		data["false_value"] = n.FalseValue
+	case *DeclareStatement:
+		data["directives"] = n.Directives
+		if n.Body != nil {
+			data["body"] = n.Body
+		}
 	}
 
 	return json.MarshalIndent(data, "", "  ")
