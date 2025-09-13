@@ -82,6 +82,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(YIELD, p.parseYieldExpression)
 	p.registerPrefix(LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(LBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(NAMESPACE_SEPARATOR, p.parseNamespacedIdentifier)
 
 	p.infixParseFns = make(map[TokenType]infixParseFn)
 	p.registerInfix(PLUS, p.parseInfixExpression)
@@ -1425,6 +1426,20 @@ func (p *Parser) parseTernaryExpression(condition Expression) Expression {
 	p.nextToken() // consume ':'
 	expr.FalseValue = p.parseExpression(LOWEST)
 
+	return expr
+}
+
+func (p *Parser) parseNamespacedIdentifier() Expression {
+	// Handle leading namespace separator like \Exception
+	expr := &Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	
+	// If next token is an identifier, this is a global reference like \Exception
+	if p.peekTokenIs(IDENT) {
+		p.nextToken()
+		expr.Value = "\\" + p.curToken.Literal
+		expr.Token = p.curToken
+	}
+	
 	return expr
 }
 
