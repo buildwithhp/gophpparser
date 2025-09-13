@@ -457,10 +457,7 @@ func (sa *SemanticAnalyzer) visitFunctionDeclaration(stmt *FunctionDeclaration) 
 
 func (sa *SemanticAnalyzer) visitNewExpression(expr *NewExpression) {
 	// Add reference to the class being instantiated
-	ref := sa.SymbolTable.AddReference(expr.ClassName.Value, CLASS_SYMBOL, expr.Token.Line, 0)
-	
-	// Store reference info in the AST node (we'll extend AST nodes for this)
-	// For now, we can add it to a metadata field or extend the node
+	_ = sa.SymbolTable.AddReference(expr.ClassName.Value, CLASS_SYMBOL, expr.Token.Line, 0)
 	
 	// Visit constructor arguments
 	for _, arg := range expr.Arguments {
@@ -688,7 +685,8 @@ func (sa *SemanticAnalyzer) ValidateReferences() {
 	}
 }
 
-func getSymbolTypeString(ref *SymbolReference) string {
+func getSymbolTypeString(_ *SymbolReference) string {
 	// This is a simplified approach - in reality you'd track the expected type
+	// The ref parameter is not used in this simple implementation
 	return "symbol"
 }

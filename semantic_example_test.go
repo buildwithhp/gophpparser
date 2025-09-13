@@ -264,7 +264,7 @@ class Service {
 	}
 }
 
-func ExampleSemanticAnalysis() {
+func ExampleParseWithSemantics() {
 	// Simple example showing how to use semantic analysis
 	phpCode := `<?php
 namespace App\Services;

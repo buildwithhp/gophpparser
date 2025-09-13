@@ -84,22 +84,13 @@ func ParseWithSemantics(input string, filename string) (*SemanticProgram, error)
 
 // ParseFileWithSemantics parses a file and performs semantic analysis
 func ParseFileWithSemantics(filepath string) (*SemanticProgram, error) {
-	// Read the file
-	content, err := ReadFileContent(filepath)
+	// Read the file using os.ReadFile
+	content, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file '%s': %v", filepath, err)
 	}
 
-	return ParseWithSemantics(content, filepath)
-}
-
-// ReadFileContent reads file contents (helper function)
-func ReadFileContent(filepath string) (string, error) {
-	if content, err := os.ReadFile(filepath); err != nil {
-		return "", err
-	} else {
-		return string(content), nil
-	}
+	return ParseWithSemantics(string(content), filepath)
 }
 
 // GetClassReferences returns all references to a specific class
