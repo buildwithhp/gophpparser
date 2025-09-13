@@ -202,6 +202,24 @@ var keywords = map[string]TokenType{
 	"require_once": REQUIRE_ONCE,
 	"fn":           ARROW_FUNCTION,
 	"declare":      DECLARE,
+	"__FILE__":     MAGIC_CONSTANT,
+	"__DIR__":      MAGIC_CONSTANT,
+	// Built-in functions commonly used in Magento
+	"dirname":      IDENT,
+	"basename":     IDENT,
+	"pathinfo":     IDENT,
+	"file_exists":  IDENT,
+	"is_dir":       IDENT,
+	"is_file":      IDENT,
+	"strlen":       IDENT,
+	"count":        IDENT,
+	"array_merge":  IDENT,
+	"explode":      IDENT,
+	"implode":      IDENT,
+	"trim":         IDENT,
+	"str_replace":  IDENT,
+	"json_encode":  IDENT,
+	"json_decode":  IDENT,
 }
 
 func LookupIdent(ident string) TokenType {

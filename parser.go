@@ -73,6 +73,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(STRING, p.parseStringLiteral)
 	p.registerPrefix(TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(FALSE, p.parseBooleanLiteral)
+	p.registerPrefix(MAGIC_CONSTANT, p.parseMagicConstant)
 	p.registerPrefix(NOT, p.parsePrefixExpression)
 	p.registerPrefix(MINUS, p.parsePrefixExpression)
 	p.registerPrefix(INCREMENT, p.parsePrefixExpression)
@@ -483,6 +484,13 @@ func (p *Parser) parseInterpolatedString() Expression {
 
 func (p *Parser) parseBooleanLiteral() Expression {
 	return &BooleanLiteral{Token: p.curToken, Value: p.curTokenIs(TRUE)}
+}
+
+func (p *Parser) parseMagicConstant() Expression {
+	return &MagicConstant{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
+	}
 }
 
 func (p *Parser) parsePrefixExpression() Expression {

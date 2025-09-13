@@ -103,6 +103,16 @@ func (bl *BooleanLiteral) TokenLiteral() string { return bl.Token.Literal }
 func (bl *BooleanLiteral) String() string       { return bl.Token.Literal }
 func (bl *BooleanLiteral) Type() string         { return "BooleanLiteral" }
 
+type MagicConstant struct {
+	Token Token  `json:"token"`
+	Value string `json:"value"`
+}
+
+func (mc *MagicConstant) expressionNode()      {}
+func (mc *MagicConstant) TokenLiteral() string { return mc.Token.Literal }
+func (mc *MagicConstant) String() string       { return mc.Token.Literal }
+func (mc *MagicConstant) Type() string         { return "MagicConstant" }
+
 type ExpressionStatement struct {
 	Token      Token      `json:"token"`
 	Expression Expression `json:"expression"`
