@@ -1,4 +1,4 @@
-package main
+package gophpparser
 
 import "fmt"
 
@@ -13,38 +13,38 @@ const (
 	INT
 	FLOAT
 	STRING
-	
+
 	// PHP Tags
 	PHP_OPEN  // <?php
 	PHP_CLOSE // ?>
-	
+
 	// Variables
 	VARIABLE // $var
-	
+
 	// Operators
-	ASSIGN   // =
-	PLUS     // +
-	MINUS    // -
-	MULTIPLY // *
-	DIVIDE   // /
-	MODULO   // %
-	CONCAT   // .
+	ASSIGN    // =
+	PLUS      // +
+	MINUS     // -
+	MULTIPLY  // *
+	DIVIDE    // /
+	MODULO    // %
+	CONCAT    // .
 	INCREMENT // ++
 	DECREMENT // --
-	
+
 	// Comparison
-	EQ    // ==
+	EQ     // ==
 	NOT_EQ // !=
 	LT     // <
 	GT     // >
 	LTE    // <=
 	GTE    // >=
-	
+
 	// Logical
-	AND    // &&
-	OR     // ||
-	NOT    // !
-	
+	AND // &&
+	OR  // ||
+	NOT // !
+
 	// Delimiters
 	COMMA     // ,
 	SEMICOLON // ;
@@ -55,7 +55,7 @@ const (
 	RBRACE    // }
 	LBRACKET  // [
 	RBRACKET  // ]
-	
+
 	// Keywords
 	FUNCTION
 	CLASS
@@ -90,10 +90,10 @@ const (
 	CONTINUE
 	DO
 	AS
-	ARROW // =>
-	DOUBLE_ARROW // =>
-	OBJECT_ACCESS // ->
-	STATIC_ACCESS // ::
+	ARROW               // =>
+	DOUBLE_ARROW        // =>
+	OBJECT_ACCESS       // ->
+	STATIC_ACCESS       // ::
 	NAMESPACE_SEPARATOR // \
 	TRY
 	CATCH
@@ -104,11 +104,11 @@ const (
 	YIELD
 	YIELD_FROM
 	// Modern PHP operators
-	QUESTION // ?
-	QUESTION_QUESTION // ??
+	QUESTION                 // ?
+	QUESTION_QUESTION        // ??
 	QUESTION_QUESTION_ASSIGN // ??=
-	SPACESHIP // <=>
-	QUESTION_ARROW // ?->
+	SPACESHIP                // <=>
+	QUESTION_ARROW           // ?->
 	// Advanced constructs
 	TRAIT
 	ABSTRACT
@@ -122,10 +122,10 @@ const (
 	INSTANCEOF
 	MATCH
 	// Type system
-	UNION_TYPE // |
+	UNION_TYPE        // |
 	INTERSECTION_TYPE // &
 	// References and variables
-	REFERENCE // &
+	REFERENCE    // &
 	VARIABLE_VAR // $$
 	// Include system
 	INCLUDE_ONCE
@@ -145,44 +145,44 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
-	"function":   FUNCTION,
-	"class":      CLASS,
-	"if":         IF,
-	"else":       ELSE,
-	"elseif":     ELSEIF,
-	"while":      WHILE,
-	"for":        FOR,
-	"foreach":    FOREACH,
-	"return":     RETURN,
-	"echo":       ECHO,
-	"print":      PRINT,
-	"var":        VAR,
-	"public":     PUBLIC,
-	"private":    PRIVATE,
-	"protected":  PROTECTED,
-	"static":     STATIC,
-	"const":      CONST,
-	"new":        NEW,
-	"extends":    EXTENDS,
-	"implements": IMPLEMENTS,
-	"interface":  INTERFACE,
-	"namespace":  NAMESPACE,
-	"use":        USE,
-	"require":    REQUIRE,
-	"include":    INCLUDE,
-	"true":       TRUE,
-	"false":      FALSE,
-	"null":       NULL,
-	"array":      ARRAY,
-	"break":      BREAK,
-	"continue":   CONTINUE,
-	"do":         DO,
-	"as":         AS,
-	"try":        TRY,
-	"catch":      CATCH,
-	"finally":    FINALLY,
-	"throw":      THROW,
-	"exception":  EXCEPTION,
+	"function":     FUNCTION,
+	"class":        CLASS,
+	"if":           IF,
+	"else":         ELSE,
+	"elseif":       ELSEIF,
+	"while":        WHILE,
+	"for":          FOR,
+	"foreach":      FOREACH,
+	"return":       RETURN,
+	"echo":         ECHO,
+	"print":        PRINT,
+	"var":          VAR,
+	"public":       PUBLIC,
+	"private":      PRIVATE,
+	"protected":    PROTECTED,
+	"static":       STATIC,
+	"const":        CONST,
+	"new":          NEW,
+	"extends":      EXTENDS,
+	"implements":   IMPLEMENTS,
+	"interface":    INTERFACE,
+	"namespace":    NAMESPACE,
+	"use":          USE,
+	"require":      REQUIRE,
+	"include":      INCLUDE,
+	"true":         TRUE,
+	"false":        FALSE,
+	"null":         NULL,
+	"array":        ARRAY,
+	"break":        BREAK,
+	"continue":     CONTINUE,
+	"do":           DO,
+	"as":           AS,
+	"try":          TRY,
+	"catch":        CATCH,
+	"finally":      FINALLY,
+	"throw":        THROW,
+	"exception":    EXCEPTION,
 	"closure":      CLOSURE,
 	"yield":        YIELD,
 	"trait":        TRAIT,

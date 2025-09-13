@@ -1,5 +1,4 @@
-package main
-
+package gophpparser
 
 type Lexer struct {
 	input        string
@@ -270,11 +269,11 @@ func (l *Lexer) readIdentifier() string {
 func (l *Lexer) readNumber() (TokenType, string) {
 	position := l.position
 	tokenType := INT
-	
+
 	for isDigit(l.ch) {
 		l.readChar()
 	}
-	
+
 	if l.ch == '.' && isDigit(l.peekChar()) {
 		tokenType = FLOAT
 		l.readChar()
@@ -282,7 +281,7 @@ func (l *Lexer) readNumber() (TokenType, string) {
 			l.readChar()
 		}
 	}
-	
+
 	return tokenType, l.input[position:l.position]
 }
 

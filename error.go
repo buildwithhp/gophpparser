@@ -1,4 +1,4 @@
-package main
+package gophpparser
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ func (e *ErrorHandler) PrintErrors() {
 	if len(e.errors) == 0 {
 		return
 	}
-	
+
 	fmt.Printf("Found %d error(s):\n", len(e.errors))
 	for _, err := range e.errors {
 		fmt.Printf("  - %s\n", err.Error())

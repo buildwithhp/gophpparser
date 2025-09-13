@@ -1,4 +1,4 @@
-package main
+package gophpparser
 
 import (
 	"encoding/json"
@@ -48,67 +48,67 @@ type Identifier struct {
 	Value string `json:"value"`
 }
 
-func (i *Identifier) expressionNode() {}
+func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string { return i.Value }
-func (i *Identifier) Type() string { return "Identifier" }
+func (i *Identifier) String() string       { return i.Value }
+func (i *Identifier) Type() string         { return "Identifier" }
 
 type Variable struct {
 	Token Token  `json:"token"`
 	Name  string `json:"name"`
 }
 
-func (v *Variable) expressionNode() {}
+func (v *Variable) expressionNode()      {}
 func (v *Variable) TokenLiteral() string { return v.Token.Literal }
-func (v *Variable) String() string { return "$" + v.Name }
-func (v *Variable) Type() string { return "Variable" }
+func (v *Variable) String() string       { return "$" + v.Name }
+func (v *Variable) Type() string         { return "Variable" }
 
 type IntegerLiteral struct {
 	Token Token `json:"token"`
 	Value int64 `json:"value"`
 }
 
-func (il *IntegerLiteral) expressionNode() {}
+func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
-func (il *IntegerLiteral) String() string { return il.Token.Literal }
-func (il *IntegerLiteral) Type() string { return "IntegerLiteral" }
+func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+func (il *IntegerLiteral) Type() string         { return "IntegerLiteral" }
 
 type FloatLiteral struct {
 	Token Token   `json:"token"`
 	Value float64 `json:"value"`
 }
 
-func (fl *FloatLiteral) expressionNode() {}
+func (fl *FloatLiteral) expressionNode()      {}
 func (fl *FloatLiteral) TokenLiteral() string { return fl.Token.Literal }
-func (fl *FloatLiteral) String() string { return fl.Token.Literal }
-func (fl *FloatLiteral) Type() string { return "FloatLiteral" }
+func (fl *FloatLiteral) String() string       { return fl.Token.Literal }
+func (fl *FloatLiteral) Type() string         { return "FloatLiteral" }
 
 type StringLiteral struct {
 	Token Token  `json:"token"`
 	Value string `json:"value"`
 }
 
-func (sl *StringLiteral) expressionNode() {}
+func (sl *StringLiteral) expressionNode()      {}
 func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
-func (sl *StringLiteral) String() string { return sl.Token.Literal }
-func (sl *StringLiteral) Type() string { return "StringLiteral" }
+func (sl *StringLiteral) String() string       { return sl.Token.Literal }
+func (sl *StringLiteral) Type() string         { return "StringLiteral" }
 
 type BooleanLiteral struct {
 	Token Token `json:"token"`
 	Value bool  `json:"value"`
 }
 
-func (bl *BooleanLiteral) expressionNode() {}
+func (bl *BooleanLiteral) expressionNode()      {}
 func (bl *BooleanLiteral) TokenLiteral() string { return bl.Token.Literal }
-func (bl *BooleanLiteral) String() string { return bl.Token.Literal }
-func (bl *BooleanLiteral) Type() string { return "BooleanLiteral" }
+func (bl *BooleanLiteral) String() string       { return bl.Token.Literal }
+func (bl *BooleanLiteral) Type() string         { return "BooleanLiteral" }
 
 type ExpressionStatement struct {
 	Token      Token      `json:"token"`
 	Expression Expression `json:"expression"`
 }
 
-func (es *ExpressionStatement) statementNode() {}
+func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
@@ -124,7 +124,7 @@ type AssignmentExpression struct {
 	Value Expression `json:"value"`
 }
 
-func (ae *AssignmentExpression) expressionNode() {}
+func (ae *AssignmentExpression) expressionNode()      {}
 func (ae *AssignmentExpression) TokenLiteral() string { return ae.Token.Literal }
 func (ae *AssignmentExpression) String() string {
 	return ae.Name.String() + " = " + ae.Value.String()
@@ -138,7 +138,7 @@ type InfixExpression struct {
 	Right    Expression `json:"right"`
 }
 
-func (ie *InfixExpression) expressionNode() {}
+func (ie *InfixExpression) expressionNode()      {}
 func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *InfixExpression) String() string {
 	return "(" + ie.Left.String() + " " + ie.Operator + " " + ie.Right.String() + ")"
@@ -151,7 +151,7 @@ type PrefixExpression struct {
 	Right    Expression `json:"right"`
 }
 
-func (pe *PrefixExpression) expressionNode() {}
+func (pe *PrefixExpression) expressionNode()      {}
 func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Literal }
 func (pe *PrefixExpression) String() string {
 	return "(" + pe.Operator + pe.Right.String() + ")"
@@ -159,13 +159,13 @@ func (pe *PrefixExpression) String() string {
 func (pe *PrefixExpression) Type() string { return "PrefixExpression" }
 
 type FunctionDeclaration struct {
-	Token      Token         `json:"token"`
-	Name       *Identifier   `json:"name"`
-	Parameters []*Variable   `json:"parameters"`
+	Token      Token           `json:"token"`
+	Name       *Identifier     `json:"name"`
+	Parameters []*Variable     `json:"parameters"`
 	Body       *BlockStatement `json:"body"`
 }
 
-func (fd *FunctionDeclaration) statementNode() {}
+func (fd *FunctionDeclaration) statementNode()       {}
 func (fd *FunctionDeclaration) TokenLiteral() string { return fd.Token.Literal }
 func (fd *FunctionDeclaration) String() string {
 	params := ""
@@ -184,7 +184,7 @@ type ReturnStatement struct {
 	ReturnValue Expression `json:"return_value"`
 }
 
-func (rs *ReturnStatement) statementNode() {}
+func (rs *ReturnStatement) statementNode()       {}
 func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
 func (rs *ReturnStatement) String() string {
 	if rs.ReturnValue != nil {
@@ -199,7 +199,7 @@ type BlockStatement struct {
 	Statements []Statement `json:"statements"`
 }
 
-func (bs *BlockStatement) statementNode() {}
+func (bs *BlockStatement) statementNode()       {}
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
 	out := "{"
@@ -218,7 +218,7 @@ type IfStatement struct {
 	Alternative *BlockStatement `json:"alternative"`
 }
 
-func (ifs *IfStatement) statementNode() {}
+func (ifs *IfStatement) statementNode()       {}
 func (ifs *IfStatement) TokenLiteral() string { return ifs.Token.Literal }
 func (ifs *IfStatement) String() string {
 	out := "if" + ifs.Condition.String() + " " + ifs.Consequence.String()
@@ -234,7 +234,7 @@ type EchoStatement struct {
 	Values []Expression `json:"values"`
 }
 
-func (es *EchoStatement) statementNode() {}
+func (es *EchoStatement) statementNode()       {}
 func (es *EchoStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *EchoStatement) String() string {
 	out := "echo "
@@ -254,7 +254,7 @@ type CallExpression struct {
 	Arguments []Expression `json:"arguments"`
 }
 
-func (ce *CallExpression) expressionNode() {}
+func (ce *CallExpression) expressionNode()      {}
 func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
 func (ce *CallExpression) String() string {
 	args := ""
@@ -273,7 +273,7 @@ type ArrayLiteral struct {
 	Elements []Expression `json:"elements"`
 }
 
-func (al *ArrayLiteral) expressionNode() {}
+func (al *ArrayLiteral) expressionNode()      {}
 func (al *ArrayLiteral) TokenLiteral() string { return al.Token.Literal }
 func (al *ArrayLiteral) String() string {
 	elements := ""
@@ -295,7 +295,7 @@ type ForStatement struct {
 	Body      *BlockStatement `json:"body"`
 }
 
-func (fs *ForStatement) statementNode() {}
+func (fs *ForStatement) statementNode()       {}
 func (fs *ForStatement) TokenLiteral() string { return fs.Token.Literal }
 func (fs *ForStatement) String() string {
 	return "for (" + fs.Init.String() + "; " + fs.Condition.String() + "; " + fs.Update.String() + ") " + fs.Body.String()
@@ -308,7 +308,7 @@ type IndexExpression struct {
 	Index Expression `json:"index"`
 }
 
-func (ie *IndexExpression) expressionNode() {}
+func (ie *IndexExpression) expressionNode()      {}
 func (ie *IndexExpression) TokenLiteral() string { return ie.Token.Literal }
 func (ie *IndexExpression) String() string {
 	return "(" + ie.Left.String() + "[" + ie.Index.String() + "])"
@@ -321,7 +321,7 @@ type PostfixExpression struct {
 	Operator string     `json:"operator"`
 }
 
-func (pe *PostfixExpression) expressionNode() {}
+func (pe *PostfixExpression) expressionNode()      {}
 func (pe *PostfixExpression) TokenLiteral() string { return pe.Token.Literal }
 func (pe *PostfixExpression) String() string {
 	return "(" + pe.Left.String() + pe.Operator + ")"
@@ -334,7 +334,7 @@ type WhileStatement struct {
 	Body      *BlockStatement `json:"body"`
 }
 
-func (ws *WhileStatement) statementNode() {}
+func (ws *WhileStatement) statementNode()       {}
 func (ws *WhileStatement) TokenLiteral() string { return ws.Token.Literal }
 func (ws *WhileStatement) String() string {
 	return "while (" + ws.Condition.String() + ") " + ws.Body.String()
@@ -342,14 +342,14 @@ func (ws *WhileStatement) String() string {
 func (ws *WhileStatement) Type() string { return "WhileStatement" }
 
 type ForeachStatement struct {
-	Token     Token           `json:"token"`
-	Array     Expression      `json:"array"`
-	Key       *Variable       `json:"key"`
-	Value     *Variable       `json:"value"`
-	Body      *BlockStatement `json:"body"`
+	Token Token           `json:"token"`
+	Array Expression      `json:"array"`
+	Key   *Variable       `json:"key"`
+	Value *Variable       `json:"value"`
+	Body  *BlockStatement `json:"body"`
 }
 
-func (fs *ForeachStatement) statementNode() {}
+func (fs *ForeachStatement) statementNode()       {}
 func (fs *ForeachStatement) TokenLiteral() string { return fs.Token.Literal }
 func (fs *ForeachStatement) String() string {
 	out := "foreach (" + fs.Array.String() + " as "
@@ -362,11 +362,11 @@ func (fs *ForeachStatement) String() string {
 func (fs *ForeachStatement) Type() string { return "ForeachStatement" }
 
 type BreakStatement struct {
-	Token Token `json:"token"`
+	Token Token      `json:"token"`
 	Level Expression `json:"level,omitempty"`
 }
 
-func (bs *BreakStatement) statementNode() {}
+func (bs *BreakStatement) statementNode()       {}
 func (bs *BreakStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BreakStatement) String() string {
 	if bs.Level != nil {
@@ -377,11 +377,11 @@ func (bs *BreakStatement) String() string {
 func (bs *BreakStatement) Type() string { return "BreakStatement" }
 
 type ContinueStatement struct {
-	Token Token `json:"token"`
+	Token Token      `json:"token"`
 	Level Expression `json:"level,omitempty"`
 }
 
-func (cs *ContinueStatement) statementNode() {}
+func (cs *ContinueStatement) statementNode()       {}
 func (cs *ContinueStatement) TokenLiteral() string { return cs.Token.Literal }
 func (cs *ContinueStatement) String() string {
 	if cs.Level != nil {
@@ -392,8 +392,8 @@ func (cs *ContinueStatement) String() string {
 func (cs *ContinueStatement) Type() string { return "ContinueStatement" }
 
 type AssociativeArrayLiteral struct {
-	Token Token             `json:"token"`
-	Pairs []ArrayPair       `json:"pairs"`
+	Token Token       `json:"token"`
+	Pairs []ArrayPair `json:"pairs"`
 }
 
 type ArrayPair struct {
@@ -401,7 +401,7 @@ type ArrayPair struct {
 	Value Expression `json:"value"`
 }
 
-func (aal *AssociativeArrayLiteral) expressionNode() {}
+func (aal *AssociativeArrayLiteral) expressionNode()      {}
 func (aal *AssociativeArrayLiteral) TokenLiteral() string { return aal.Token.Literal }
 func (aal *AssociativeArrayLiteral) String() string {
 	pairs := ""
@@ -416,11 +416,11 @@ func (aal *AssociativeArrayLiteral) String() string {
 func (aal *AssociativeArrayLiteral) Type() string { return "AssociativeArrayLiteral" }
 
 type InterpolatedString struct {
-	Token     Token        `json:"token"`
-	Parts     []Expression `json:"parts"`
+	Token Token        `json:"token"`
+	Parts []Expression `json:"parts"`
 }
 
-func (is *InterpolatedString) expressionNode() {}
+func (is *InterpolatedString) expressionNode()      {}
 func (is *InterpolatedString) TokenLiteral() string { return is.Token.Literal }
 func (is *InterpolatedString) String() string {
 	out := "\""
@@ -433,17 +433,17 @@ func (is *InterpolatedString) String() string {
 func (is *InterpolatedString) Type() string { return "InterpolatedString" }
 
 type ClassDeclaration struct {
-	Token       Token                  `json:"token"`
-	Name        *Identifier            `json:"name"`
-	SuperClass  *Identifier            `json:"super_class,omitempty"`
-	Interfaces  []*Identifier          `json:"interfaces,omitempty"`
-	TraitUses   []*TraitUse            `json:"trait_uses,omitempty"`
-	Properties  []*PropertyDeclaration `json:"properties"`
-	Methods     []*MethodDeclaration   `json:"methods"`
-	Constants   []*ConstantDeclaration `json:"constants,omitempty"`
+	Token      Token                  `json:"token"`
+	Name       *Identifier            `json:"name"`
+	SuperClass *Identifier            `json:"super_class,omitempty"`
+	Interfaces []*Identifier          `json:"interfaces,omitempty"`
+	TraitUses  []*TraitUse            `json:"trait_uses,omitempty"`
+	Properties []*PropertyDeclaration `json:"properties"`
+	Methods    []*MethodDeclaration   `json:"methods"`
+	Constants  []*ConstantDeclaration `json:"constants,omitempty"`
 }
 
-func (cd *ClassDeclaration) statementNode() {}
+func (cd *ClassDeclaration) statementNode()       {}
 func (cd *ClassDeclaration) TokenLiteral() string { return cd.Token.Literal }
 func (cd *ClassDeclaration) String() string {
 	out := "class " + cd.Name.String()
@@ -478,14 +478,14 @@ func (cd *ClassDeclaration) String() string {
 func (cd *ClassDeclaration) Type() string { return "ClassDeclaration" }
 
 type PropertyDeclaration struct {
-	Token      Token       `json:"token"`
-	Visibility string      `json:"visibility"`
-	Static     bool        `json:"static"`
-	Name       *Variable   `json:"name"`
-	Value      Expression  `json:"value,omitempty"`
+	Token      Token      `json:"token"`
+	Visibility string     `json:"visibility"`
+	Static     bool       `json:"static"`
+	Name       *Variable  `json:"name"`
+	Value      Expression `json:"value,omitempty"`
 }
 
-func (pd *PropertyDeclaration) statementNode() {}
+func (pd *PropertyDeclaration) statementNode()       {}
 func (pd *PropertyDeclaration) TokenLiteral() string { return pd.Token.Literal }
 func (pd *PropertyDeclaration) String() string {
 	out := pd.Visibility
@@ -502,15 +502,15 @@ func (pd *PropertyDeclaration) String() string {
 func (pd *PropertyDeclaration) Type() string { return "PropertyDeclaration" }
 
 type MethodDeclaration struct {
-	Token        Token           `json:"token"`
-	Visibility   string          `json:"visibility"`
-	Static       bool            `json:"static"`
-	Name         *Identifier     `json:"name"`
-	Parameters   []*Variable     `json:"parameters"`
-	Body         *BlockStatement `json:"body"`
+	Token      Token           `json:"token"`
+	Visibility string          `json:"visibility"`
+	Static     bool            `json:"static"`
+	Name       *Identifier     `json:"name"`
+	Parameters []*Variable     `json:"parameters"`
+	Body       *BlockStatement `json:"body"`
 }
 
-func (md *MethodDeclaration) statementNode() {}
+func (md *MethodDeclaration) statementNode()       {}
 func (md *MethodDeclaration) TokenLiteral() string { return md.Token.Literal }
 func (md *MethodDeclaration) String() string {
 	out := md.Visibility
@@ -531,12 +531,12 @@ func (md *MethodDeclaration) String() string {
 func (md *MethodDeclaration) Type() string { return "MethodDeclaration" }
 
 type InterfaceDeclaration struct {
-	Token   Token                `json:"token"`
-	Name    *Identifier          `json:"name"`
-	Methods []*InterfaceMethod   `json:"methods"`
+	Token   Token              `json:"token"`
+	Name    *Identifier        `json:"name"`
+	Methods []*InterfaceMethod `json:"methods"`
 }
 
-func (id *InterfaceDeclaration) statementNode() {}
+func (id *InterfaceDeclaration) statementNode()       {}
 func (id *InterfaceDeclaration) TokenLiteral() string { return id.Token.Literal }
 func (id *InterfaceDeclaration) String() string {
 	out := "interface " + id.Name.String() + " {"
@@ -549,13 +549,13 @@ func (id *InterfaceDeclaration) String() string {
 func (id *InterfaceDeclaration) Type() string { return "InterfaceDeclaration" }
 
 type InterfaceMethod struct {
-	Token        Token       `json:"token"`
-	Visibility   string      `json:"visibility"`
-	Name         *Identifier `json:"name"`
-	Parameters   []*Variable `json:"parameters"`
+	Token      Token       `json:"token"`
+	Visibility string      `json:"visibility"`
+	Name       *Identifier `json:"name"`
+	Parameters []*Variable `json:"parameters"`
 }
 
-func (im *InterfaceMethod) statementNode() {}
+func (im *InterfaceMethod) statementNode()       {}
 func (im *InterfaceMethod) TokenLiteral() string { return im.Token.Literal }
 func (im *InterfaceMethod) String() string {
 	params := ""
@@ -576,7 +576,7 @@ type TraitDeclaration struct {
 	Methods    []*MethodDeclaration   `json:"methods"`
 }
 
-func (td *TraitDeclaration) statementNode() {}
+func (td *TraitDeclaration) statementNode()       {}
 func (td *TraitDeclaration) TokenLiteral() string { return td.Token.Literal }
 func (td *TraitDeclaration) String() string {
 	out := "trait " + td.Name.String() + " {"
@@ -596,7 +596,7 @@ type TraitUse struct {
 	Traits []*Identifier `json:"traits"`
 }
 
-func (tu *TraitUse) statementNode() {}
+func (tu *TraitUse) statementNode()       {}
 func (tu *TraitUse) TokenLiteral() string { return tu.Token.Literal }
 func (tu *TraitUse) String() string {
 	traits := ""
@@ -617,7 +617,7 @@ type ConstantDeclaration struct {
 	Value      Expression  `json:"value"`
 }
 
-func (cd *ConstantDeclaration) statementNode() {}
+func (cd *ConstantDeclaration) statementNode()       {}
 func (cd *ConstantDeclaration) TokenLiteral() string { return cd.Token.Literal }
 func (cd *ConstantDeclaration) String() string {
 	out := cd.Visibility + " const " + cd.Name.String() + " = " + cd.Value.String() + ";"
@@ -631,7 +631,7 @@ type NewExpression struct {
 	Arguments []Expression `json:"arguments"`
 }
 
-func (ne *NewExpression) expressionNode() {}
+func (ne *NewExpression) expressionNode()      {}
 func (ne *NewExpression) TokenLiteral() string { return ne.Token.Literal }
 func (ne *NewExpression) String() string {
 	args := ""
@@ -651,7 +651,7 @@ type ObjectAccessExpression struct {
 	Property Expression `json:"property"`
 }
 
-func (oae *ObjectAccessExpression) expressionNode() {}
+func (oae *ObjectAccessExpression) expressionNode()      {}
 func (oae *ObjectAccessExpression) TokenLiteral() string { return oae.Token.Literal }
 func (oae *ObjectAccessExpression) String() string {
 	return oae.Object.String() + "->" + oae.Property.String()
@@ -664,7 +664,7 @@ type StaticAccessExpression struct {
 	Property Expression `json:"property"`
 }
 
-func (sae *StaticAccessExpression) expressionNode() {}
+func (sae *StaticAccessExpression) expressionNode()      {}
 func (sae *StaticAccessExpression) TokenLiteral() string { return sae.Token.Literal }
 func (sae *StaticAccessExpression) String() string {
 	return sae.Class.String() + "::" + sae.Property.String()
@@ -676,7 +676,7 @@ type NamespaceDeclaration struct {
 	Name  *Identifier `json:"name"`
 }
 
-func (nd *NamespaceDeclaration) statementNode() {}
+func (nd *NamespaceDeclaration) statementNode()       {}
 func (nd *NamespaceDeclaration) TokenLiteral() string { return nd.Token.Literal }
 func (nd *NamespaceDeclaration) String() string {
 	return "namespace " + nd.Name.String() + ";"
@@ -689,7 +689,7 @@ type UseStatement struct {
 	Alias     *Identifier `json:"alias,omitempty"`
 }
 
-func (us *UseStatement) statementNode() {}
+func (us *UseStatement) statementNode()       {}
 func (us *UseStatement) TokenLiteral() string { return us.Token.Literal }
 func (us *UseStatement) String() string {
 	out := "use " + us.Namespace.String()
@@ -702,13 +702,13 @@ func (us *UseStatement) String() string {
 func (us *UseStatement) Type() string { return "UseStatement" }
 
 type TryStatement struct {
-	Token   Token            `json:"token"`
-	Body    *BlockStatement  `json:"body"`
-	Catches []*CatchClause   `json:"catches"`
-	Finally *BlockStatement  `json:"finally,omitempty"`
+	Token   Token           `json:"token"`
+	Body    *BlockStatement `json:"body"`
+	Catches []*CatchClause  `json:"catches"`
+	Finally *BlockStatement `json:"finally,omitempty"`
 }
 
-func (ts *TryStatement) statementNode() {}
+func (ts *TryStatement) statementNode()       {}
 func (ts *TryStatement) TokenLiteral() string { return ts.Token.Literal }
 func (ts *TryStatement) String() string {
 	out := "try " + ts.Body.String()
@@ -729,7 +729,7 @@ type CatchClause struct {
 	Body          *BlockStatement `json:"body"`
 }
 
-func (cc *CatchClause) statementNode() {}
+func (cc *CatchClause) statementNode()       {}
 func (cc *CatchClause) TokenLiteral() string { return cc.Token.Literal }
 func (cc *CatchClause) String() string {
 	out := " catch ("
@@ -746,7 +746,7 @@ type ThrowStatement struct {
 	Expression Expression `json:"expression"`
 }
 
-func (ts *ThrowStatement) statementNode() {}
+func (ts *ThrowStatement) statementNode()       {}
 func (ts *ThrowStatement) TokenLiteral() string { return ts.Token.Literal }
 func (ts *ThrowStatement) String() string {
 	return "throw " + ts.Expression.String() + ";"
@@ -760,7 +760,7 @@ type AnonymousFunction struct {
 	Body       *BlockStatement `json:"body"`
 }
 
-func (af *AnonymousFunction) expressionNode() {}
+func (af *AnonymousFunction) expressionNode()      {}
 func (af *AnonymousFunction) TokenLiteral() string { return af.Token.Literal }
 func (af *AnonymousFunction) String() string {
 	params := ""
@@ -771,7 +771,7 @@ func (af *AnonymousFunction) String() string {
 		params += p.String()
 	}
 	out := "function(" + params + ")"
-	
+
 	if len(af.UseClause) > 0 {
 		uses := ""
 		for i, u := range af.UseClause {
@@ -782,7 +782,7 @@ func (af *AnonymousFunction) String() string {
 		}
 		out += " use (" + uses + ")"
 	}
-	
+
 	out += " " + af.Body.String()
 	return out
 }
@@ -794,7 +794,7 @@ type NamespacedIdentifier struct {
 	Name      *Identifier   `json:"name"`
 }
 
-func (ni *NamespacedIdentifier) expressionNode() {}
+func (ni *NamespacedIdentifier) expressionNode()      {}
 func (ni *NamespacedIdentifier) TokenLiteral() string { return ni.Token.Literal }
 func (ni *NamespacedIdentifier) String() string {
 	out := ""
@@ -818,7 +818,7 @@ type YieldExpression struct {
 	Value Expression `json:"value,omitempty"`
 }
 
-func (ye *YieldExpression) expressionNode() {}
+func (ye *YieldExpression) expressionNode()      {}
 func (ye *YieldExpression) TokenLiteral() string { return ye.Token.Literal }
 func (ye *YieldExpression) String() string {
 	if ye.Key != nil && ye.Value != nil {
@@ -831,13 +831,13 @@ func (ye *YieldExpression) String() string {
 func (ye *YieldExpression) Type() string { return "YieldExpression" }
 
 type TernaryExpression struct {
-	Token       Token      `json:"token"`
-	Condition   Expression `json:"condition"`
-	TrueValue   Expression `json:"true_value"`
-	FalseValue  Expression `json:"false_value"`
+	Token      Token      `json:"token"`
+	Condition  Expression `json:"condition"`
+	TrueValue  Expression `json:"true_value"`
+	FalseValue Expression `json:"false_value"`
 }
 
-func (te *TernaryExpression) expressionNode() {}
+func (te *TernaryExpression) expressionNode()      {}
 func (te *TernaryExpression) TokenLiteral() string { return te.Token.Literal }
 func (te *TernaryExpression) String() string {
 	return "(" + te.Condition.String() + " ? " + te.TrueValue.String() + " : " + te.FalseValue.String() + ")"
@@ -848,7 +848,7 @@ func ToJSON(node Node) ([]byte, error) {
 	data := map[string]any{
 		"type": node.Type(),
 	}
-	
+
 	switch n := node.(type) {
 	case *Program:
 		data["statements"] = n.Statements
@@ -1027,6 +1027,6 @@ func ToJSON(node Node) ([]byte, error) {
 		data["true_value"] = n.TrueValue
 		data["false_value"] = n.FalseValue
 	}
-	
+
 	return json.MarshalIndent(data, "", "  ")
 }

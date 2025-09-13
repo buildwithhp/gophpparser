@@ -1,10 +1,50 @@
-package main
+package gophpparser
 
 import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
+
+// Parsefile parses the given PHP file and returns the parsed program
+// and any errors encountered during parsing. If the file does not
+// exist, it returns an error with a message indicating the file
+// does not exist.
+func Parsefile(filepath string) (*Program, error) {
+	// Check if the file exists
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("File '%s' does not exist", filepath)
+	}
+
+	// Read the contents of the file
+	content, err := os.ReadFile(filepath)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading file '%s': %v", filepath, err)
+	}
+
+	// Convert the content to a string
+	input := string(content)
+
+	// Create a lexer with the input string
+	lexer := New(input)
+
+	// Create a parser with the lexer
+	parser := NewParser(lexer)
+
+	// Parse the program
+	program := parser.ParseProgram()
+
+	// Check if there are any parser errors
+	if len(parser.Errors()) != 0 {
+		// If there are errors, construct an error string
+		errStr := fmt.Sprintf("Parser errors for file '%s':\n", filepath)
+		return nil, fmt.Errorf("%s%s", errStr, strings.Join(parser.Errors(), "\n"))
+	}
+
+	// Return the parsed program and nil for the error
+	return program, nil
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -14,14 +54,14 @@ func main() {
 	}
 
 	arg := os.Args[1]
-	
+
 	if arg == "-h" || arg == "--help" {
 		printHelp()
 		return
 	}
 
 	filename := arg
-	
+
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		log.Fatalf("File '%s' does not exist", filename)
 	}
@@ -32,7 +72,7 @@ func main() {
 	}
 
 	input := string(content)
-	
+
 	lexer := New(input)
 	parser := NewParser(lexer)
 	program := parser.ParseProgram()
