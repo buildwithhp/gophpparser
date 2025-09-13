@@ -26,6 +26,8 @@ var precedences = map[TokenType]int{
 	QUESTION_ARROW:           CALL,
 	EQ:                       EQUALS,
 	NOT_EQ:                   EQUALS,
+	STRICT_EQ:                EQUALS,
+	STRICT_NOT_EQ:            EQUALS,
 	LT:                       LESSGREATER,
 	GT:                       LESSGREATER,
 	LTE:                      LESSGREATER,
@@ -73,6 +75,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(STRING, p.parseStringLiteral)
 	p.registerPrefix(TRUE, p.parseBooleanLiteral)
 	p.registerPrefix(FALSE, p.parseBooleanLiteral)
+	p.registerPrefix(NULL, p.parseNullLiteral)
 	p.registerPrefix(MAGIC_CONSTANT, p.parseMagicConstant)
 	p.registerPrefix(NOT, p.parsePrefixExpression)
 	p.registerPrefix(MINUS, p.parsePrefixExpression)
@@ -80,11 +83,20 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(DECREMENT, p.parsePrefixExpression)
 	p.registerPrefix(NEW, p.parseNewExpression)
 	p.registerPrefix(FUNCTION, p.parseAnonymousFunction)
+	p.registerPrefix(STATIC, p.parseStaticFunction)
 	p.registerPrefix(YIELD, p.parseYieldExpression)
 	p.registerPrefix(LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(NAMESPACE_SEPARATOR, p.parseNamespacedIdentifier)
 	p.registerPrefix(QUESTION, p.parseTernaryOrNullable)
+	p.registerPrefix(INCLUDE, p.parseIncludeExpression)
+	p.registerPrefix(INCLUDE_ONCE, p.parseIncludeExpression)
+	p.registerPrefix(REQUIRE, p.parseRequireExpression)
+	p.registerPrefix(REQUIRE_ONCE, p.parseRequireExpression)
+	// Add prefix functions for operators that might appear in unexpected contexts
+	p.registerPrefix(MULTIPLY, p.parseUnexpectedToken)
+	p.registerPrefix(DIVIDE, p.parseUnexpectedToken)
+	p.registerPrefix(ASSIGN, p.parseUnexpectedToken)
 
 	p.infixParseFns = make(map[TokenType]infixParseFn)
 	p.registerInfix(PLUS, p.parseInfixExpression)
@@ -95,6 +107,8 @@ func NewParser(l *Lexer) *Parser {
 	p.registerInfix(CONCAT, p.parseInfixExpression)
 	p.registerInfix(EQ, p.parseInfixExpression)
 	p.registerInfix(NOT_EQ, p.parseInfixExpression)
+	p.registerInfix(STRICT_EQ, p.parseInfixExpression)
+	p.registerInfix(STRICT_NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(LT, p.parseInfixExpression)
 	p.registerInfix(GT, p.parseInfixExpression)
 	p.registerInfix(LTE, p.parseInfixExpression)
@@ -167,6 +181,10 @@ func (p *Parser) parseStatement() Statement {
 		return p.parseUseStatement()
 	case DECLARE:
 		return p.parseDeclareStatement()
+	case COMMENT:
+		return p.parseComment()
+	case DOCBLOCK:
+		return p.parseComment()
 	case TRY:
 		return p.parseTryStatement()
 	case THROW:
@@ -187,6 +205,14 @@ func (p *Parser) parseStatement() Statement {
 		return p.parseBreakStatement()
 	case CONTINUE:
 		return p.parseContinueStatement()
+	case INCLUDE:
+		return p.parseIncludeStatement()
+	case INCLUDE_ONCE:
+		return p.parseIncludeStatement()
+	case REQUIRE:
+		return p.parseRequireStatement()
+	case REQUIRE_ONCE:
+		return p.parseRequireStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -206,6 +232,13 @@ func (p *Parser) parseFunctionDeclaration() *FunctionDeclaration {
 	}
 
 	stmt.Parameters = p.parseFunctionParameters()
+
+	// Check for return type hint
+	if p.peekTokenIs(COLON) {
+		p.nextToken() // consume ':'
+		p.nextToken() // move to return type
+		stmt.ReturnType = p.parseExpression(LOWEST)
+	}
 
 	if !p.expectPeek(LBRACE) {
 		return nil
@@ -491,6 +524,22 @@ func (p *Parser) parseMagicConstant() Expression {
 		Token: p.curToken,
 		Value: p.curToken.Literal,
 	}
+}
+
+func (p *Parser) parseUnexpectedToken() Expression {
+	// Handle tokens that appear in unexpected prefix positions
+	// This is often due to string interpolation or parsing context issues
+	p.noPrefixParseFnError(p.curToken.Type)
+	return nil
+}
+
+func (p *Parser) parseComment() Statement {
+	comment := &Comment{
+		Token:      p.curToken,
+		Text:       p.curToken.Literal,
+		IsDocBlock: p.curToken.Type == DOCBLOCK,
+	}
+	return comment
 }
 
 func (p *Parser) parsePrefixExpression() Expression {
@@ -1041,11 +1090,31 @@ func (p *Parser) parseMethodDeclaration(visibility string, static bool) *MethodD
 func (p *Parser) parseNewExpression() Expression {
 	expr := &NewExpression{Token: p.curToken}
 
-	if !p.expectPeek(IDENT) {
+	// Handle both regular identifiers and namespaced identifiers
+	if p.peekTokenIs(IDENT) {
+		p.nextToken()
+		expr.ClassName = &Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	} else if p.peekTokenIs(NAMESPACE_SEPARATOR) {
+		p.nextToken()
+		// Parse namespaced identifier and convert to single identifier
+		nsId := p.parseNamespacedIdentifier()
+		if nsId != nil {
+			// Create a combined identifier with the full namespace path
+			var token Token
+			if nsId.TokenLiteral() == "" {
+				token = Token{}
+			} else {
+				token = Token{Literal: nsId.String()}
+			}
+			expr.ClassName = &Identifier{
+				Token: token,
+				Value: nsId.String(),
+			}
+		}
+	} else {
+		p.peekError(IDENT)
 		return nil
 	}
-
-	expr.ClassName = &Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
 	if p.peekTokenIs(LPAREN) {
 		p.nextToken() // consume (
@@ -1102,7 +1171,29 @@ func (p *Parser) parseUseStatement() *UseStatement {
 		return nil
 	}
 
-	stmt.Namespace = &Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	// Parse the full namespaced identifier (e.g., Magento\Framework\Autoload\AutoloaderRegistry)
+	var namespaceParts []string
+	namespaceParts = append(namespaceParts, p.curToken.Literal)
+	
+	// Continue parsing namespace parts separated by \
+	for p.peekTokenIs(NAMESPACE_SEPARATOR) {
+		p.nextToken() // consume \
+		if !p.expectPeek(IDENT) {
+			break
+		}
+		namespaceParts = append(namespaceParts, p.curToken.Literal)
+	}
+	
+	// Join all parts with \ to create the full namespace
+	fullNamespace := ""
+	for i, part := range namespaceParts {
+		if i > 0 {
+			fullNamespace += "\\"
+		}
+		fullNamespace += part
+	}
+	
+	stmt.Namespace = &Identifier{Token: p.curToken, Value: fullNamespace}
 
 	// Check for alias
 	if p.peekTokenIs(AS) {
@@ -1206,6 +1297,13 @@ func (p *Parser) parseAnonymousFunction() Expression {
 	}
 
 	fn.Parameters = p.parseFunctionParameters()
+
+	// Check for return type hint
+	if p.peekTokenIs(COLON) {
+		p.nextToken() // consume ':'
+		p.nextToken() // move to return type
+		fn.ReturnType = p.parseExpression(LOWEST)
+	}
 
 	// Check for use clause
 	if p.peekTokenIs(USE) {
@@ -1506,9 +1604,24 @@ func (p *Parser) parseNamespacedIdentifier() Expression {
 }
 
 func (p *Parser) parseTernaryOrNullable() Expression {
-	// For now, just return a basic identifier - this is a placeholder
-	// In a full implementation, this would handle nullable types (PHP 7+)
-	return &Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	questionToken := p.curToken
+	
+	// Look ahead to determine if this is a nullable type or ternary operator
+	// If next token is a type identifier (IDENT) or basic type, treat as nullable type
+	if p.peekTokenIs(IDENT) || p.peekTokenIs(STRING) || p.peekTokenIs(INT) || p.peekTokenIs(ARRAY) {
+		// Parse as nullable type
+		p.nextToken() // move to the type
+		baseType := p.parseExpression(LOWEST)
+		
+		return &NullableType{
+			Token:    questionToken,
+			BaseType: baseType,
+		}
+	}
+	
+	// Otherwise, treat as ternary operator (not implemented yet)
+	// For now, return a placeholder
+	return &Identifier{Token: questionToken, Value: questionToken.Literal}
 }
 
 
@@ -1545,6 +1658,118 @@ func Parsefile(filepath string) (*Program, error) {
 		// If there are errors, construct an error string
 		errStr := fmt.Sprintf("Parser errors for file '%s':\n", filepath)
 		return nil, fmt.Errorf("%s%s", errStr, strings.Join(parser.Errors(), "\n"))
+	}
+
+	// Return the parsed program and nil for the error
+	return program, nil
+}
+
+func (p *Parser) parseIncludeStatement() Statement {
+	stmt := &IncludeStatement{Token: p.curToken}
+	
+	// Check if this is include_once
+	stmt.Once = (p.curToken.Type == INCLUDE_ONCE)
+	
+	// Expect the path expression
+	p.nextToken()
+	stmt.Path = p.parseExpression(LOWEST)
+	
+	// Optional semicolon
+	if p.peekTokenIs(SEMICOLON) {
+		p.nextToken()
+	}
+	
+	return stmt
+}
+
+func (p *Parser) parseRequireStatement() Statement {
+	stmt := &RequireStatement{Token: p.curToken}
+	
+	// Check if this is require_once
+	stmt.Once = (p.curToken.Type == REQUIRE_ONCE)
+	
+	// Expect the path expression
+	p.nextToken()
+	stmt.Path = p.parseExpression(LOWEST)
+	
+	// Optional semicolon
+	if p.peekTokenIs(SEMICOLON) {
+		p.nextToken()
+	}
+	
+	return stmt
+}
+
+func (p *Parser) parseIncludeExpression() Expression {
+	expr := &IncludeExpression{Token: p.curToken}
+	
+	// Check if this is include_once
+	expr.Once = (p.curToken.Type == INCLUDE_ONCE)
+	
+	// Expect the path expression
+	p.nextToken()
+	expr.Path = p.parseExpression(LOWEST)
+	
+	return expr
+}
+
+func (p *Parser) parseRequireExpression() Expression {
+	expr := &RequireExpression{Token: p.curToken}
+	
+	// Check if this is require_once
+	expr.Once = (p.curToken.Type == REQUIRE_ONCE)
+	
+	// Expect the path expression
+	p.nextToken()
+	expr.Path = p.parseExpression(LOWEST)
+	
+	return expr
+}
+
+func (p *Parser) parseStaticFunction() Expression {
+	staticToken := p.curToken
+	
+	// Expect 'function' after 'static'
+	if !p.expectPeek(FUNCTION) {
+		return nil
+	}
+	
+	// Parse as anonymous function but mark as static
+	fn := p.parseAnonymousFunction().(*AnonymousFunction)
+	if fn != nil {
+		fn.Static = true
+		fn.Token = staticToken // Use static token as the main token
+	}
+	
+	return fn
+}
+
+func (p *Parser) parseNullLiteral() Expression {
+	return &NullLiteral{Token: p.curToken}
+}
+
+// Parse parses PHP source code from a string and returns an AST.
+// This is the most convenient entry point for parsing PHP code.
+//
+// Example usage:
+//     program, err := gophpparser.Parse("<?php echo 'Hello World';")
+//     if err != nil {
+//         log.Fatal(err)
+//     }
+//     // Use program.Statements to access the parsed AST
+func Parse(input string) (*Program, error) {
+	// Create a lexer with the input string
+	lexer := New(input)
+
+	// Create a parser with the lexer
+	parser := NewParser(lexer)
+
+	// Parse the input to create a program (AST)
+	program := parser.ParseProgram()
+
+	// Check for any parsing errors
+	if len(parser.Errors()) > 0 {
+		return nil, fmt.Errorf("parser errors: %s", strings.Join(parser.Errors(), "; "))
 	}
 
 	// Return the parsed program and nil for the error

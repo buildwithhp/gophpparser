@@ -33,8 +33,10 @@ const (
 	DECREMENT // --
 
 	// Comparison
-	EQ     // ==
-	NOT_EQ // !=
+	EQ        // ==
+	NOT_EQ    // !=
+	STRICT_EQ // ===
+	STRICT_NOT_EQ // !==
 	LT     // <
 	GT     // >
 	LTE    // <=
@@ -136,6 +138,9 @@ const (
 	ARROW_FUNCTION // fn
 	// PHP 7+ features
 	DECLARE // declare
+	// Comments
+	COMMENT      // /* */ or //
+	DOCBLOCK     // /** */
 )
 
 type Token struct {
@@ -271,6 +276,10 @@ func (t TokenType) String() string {
 		return "EQ"
 	case NOT_EQ:
 		return "NOT_EQ"
+	case STRICT_EQ:
+		return "STRICT_EQ"
+	case STRICT_NOT_EQ:
+		return "STRICT_NOT_EQ"
 	case LT:
 		return "LT"
 	case GT:
@@ -387,6 +396,40 @@ func (t TokenType) String() string {
 		return "ARROW_FUNCTION"
 	case DECLARE:
 		return "DECLARE"
+	case COMMENT:
+		return "COMMENT"
+	case DOCBLOCK:
+		return "DOCBLOCK"
+	case NAMESPACE:
+		return "NAMESPACE"
+	case USE:
+		return "USE"
+	case REQUIRE:
+		return "REQUIRE"
+	case INCLUDE:
+		return "INCLUDE"
+	case IF:
+		return "IF"
+	case ELSE:
+		return "ELSE"
+	case ELSEIF:
+		return "ELSEIF"
+	case WHILE:
+		return "WHILE"
+	case FOR:
+		return "FOR"
+	case FOREACH:
+		return "FOREACH"
+	case RETURN:
+		return "RETURN"
+	case ECHO:
+		return "ECHO"
+	case PRINT:
+		return "PRINT"
+	case FUNCTION:
+		return "FUNCTION"
+	case CLASS:
+		return "CLASS"
 	default:
 		return fmt.Sprintf("KEYWORD(%d)", t)
 	}

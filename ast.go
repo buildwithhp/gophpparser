@@ -103,6 +103,15 @@ func (bl *BooleanLiteral) TokenLiteral() string { return bl.Token.Literal }
 func (bl *BooleanLiteral) String() string       { return bl.Token.Literal }
 func (bl *BooleanLiteral) Type() string         { return "BooleanLiteral" }
 
+type NullLiteral struct {
+	Token Token `json:"token"`
+}
+
+func (nl *NullLiteral) expressionNode()      {}
+func (nl *NullLiteral) TokenLiteral() string { return nl.Token.Literal }
+func (nl *NullLiteral) String() string       { return "null" }
+func (nl *NullLiteral) Type() string         { return "NullLiteral" }
+
 type MagicConstant struct {
 	Token Token  `json:"token"`
 	Value string `json:"value"`
@@ -112,6 +121,17 @@ func (mc *MagicConstant) expressionNode()      {}
 func (mc *MagicConstant) TokenLiteral() string { return mc.Token.Literal }
 func (mc *MagicConstant) String() string       { return mc.Token.Literal }
 func (mc *MagicConstant) Type() string         { return "MagicConstant" }
+
+type Comment struct {
+	Token     Token  `json:"token"`
+	Text      string `json:"text"`
+	IsDocBlock bool  `json:"is_docblock"`
+}
+
+func (c *Comment) statementNode()       {}
+func (c *Comment) TokenLiteral() string { return c.Token.Literal }
+func (c *Comment) String() string       { return c.Text }
+func (c *Comment) Type() string         { return "Comment" }
 
 type ExpressionStatement struct {
 	Token      Token      `json:"token"`
@@ -172,6 +192,7 @@ type FunctionDeclaration struct {
 	Token      Token           `json:"token"`
 	Name       *Identifier     `json:"name"`
 	Parameters []*Variable     `json:"parameters"`
+	ReturnType Expression      `json:"return_type,omitempty"`
 	Body       *BlockStatement `json:"body"`
 }
 
@@ -185,7 +206,12 @@ func (fd *FunctionDeclaration) String() string {
 		}
 		params += p.String()
 	}
-	return "function " + fd.Name.String() + "(" + params + ") " + fd.Body.String()
+	out := "function " + fd.Name.String() + "(" + params + ")"
+	if fd.ReturnType != nil {
+		out += ": " + fd.ReturnType.String()
+	}
+	out += " " + fd.Body.String()
+	return out
 }
 func (fd *FunctionDeclaration) Type() string { return "FunctionDeclaration" }
 
@@ -231,7 +257,21 @@ type IfStatement struct {
 func (ifs *IfStatement) statementNode()       {}
 func (ifs *IfStatement) TokenLiteral() string { return ifs.Token.Literal }
 func (ifs *IfStatement) String() string {
-	out := "if" + ifs.Condition.String() + " " + ifs.Consequence.String()
+	if ifs == nil {
+		return "<nil IfStatement>"
+	}
+	out := "if"
+	if ifs.Condition != nil {
+		out += ifs.Condition.String()
+	} else {
+		out += "<nil condition>"
+	}
+	out += " "
+	if ifs.Consequence != nil {
+		out += ifs.Consequence.String()
+	} else {
+		out += "<nil consequence>"
+	}
 	if ifs.Alternative != nil {
 		out += "else " + ifs.Alternative.String()
 	}
@@ -763,10 +803,86 @@ func (ts *ThrowStatement) String() string {
 }
 func (ts *ThrowStatement) Type() string { return "ThrowStatement" }
 
+type IncludeStatement struct {
+	Token Token      `json:"token"`
+	Path  Expression `json:"path"`
+	Once  bool       `json:"once"`
+}
+
+func (is *IncludeStatement) statementNode()       {}
+func (is *IncludeStatement) TokenLiteral() string { return is.Token.Literal }
+func (is *IncludeStatement) String() string {
+	if is.Once {
+		return "include_once " + is.Path.String()
+	}
+	return "include " + is.Path.String()
+}
+func (is *IncludeStatement) Type() string { return "IncludeStatement" }
+
+type RequireStatement struct {
+	Token Token      `json:"token"`
+	Path  Expression `json:"path"`
+	Once  bool       `json:"once"`
+}
+
+func (rs *RequireStatement) statementNode()       {}
+func (rs *RequireStatement) TokenLiteral() string { return rs.Token.Literal }
+func (rs *RequireStatement) String() string {
+	if rs.Once {
+		return "require_once " + rs.Path.String()
+	}
+	return "require " + rs.Path.String()
+}
+func (rs *RequireStatement) Type() string { return "RequireStatement" }
+
+type IncludeExpression struct {
+	Token Token      `json:"token"`
+	Path  Expression `json:"path"`
+	Once  bool       `json:"once"`
+}
+
+func (ie *IncludeExpression) expressionNode()      {}
+func (ie *IncludeExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IncludeExpression) String() string {
+	if ie.Once {
+		return "include_once " + ie.Path.String()
+	}
+	return "include " + ie.Path.String()
+}
+func (ie *IncludeExpression) Type() string { return "IncludeExpression" }
+
+type RequireExpression struct {
+	Token Token      `json:"token"`
+	Path  Expression `json:"path"`
+	Once  bool       `json:"once"`
+}
+
+func (re *RequireExpression) expressionNode()      {}
+func (re *RequireExpression) TokenLiteral() string { return re.Token.Literal }
+func (re *RequireExpression) String() string {
+	if re.Once {
+		return "require_once " + re.Path.String()
+	}
+	return "require " + re.Path.String()
+}
+func (re *RequireExpression) Type() string { return "RequireExpression" }
+
+type NullableType struct {
+	Token    Token      `json:"token"`
+	BaseType Expression `json:"base_type"`
+}
+
+func (nt *NullableType) expressionNode()      {}
+func (nt *NullableType) TokenLiteral() string { return nt.Token.Literal }
+func (nt *NullableType) String() string       { return "?" + nt.BaseType.String() }
+func (nt *NullableType) Type() string         { return "NullableType" }
+
 type AnonymousFunction struct {
 	Token      Token           `json:"token"`
+	Static     bool            `json:"static,omitempty"`
 	Parameters []*Variable     `json:"parameters"`
 	UseClause  []*Variable     `json:"use_clause,omitempty"`
+	ReturnType Expression      `json:"return_type,omitempty"`
 	Body       *BlockStatement `json:"body"`
 }
 
@@ -780,7 +896,16 @@ func (af *AnonymousFunction) String() string {
 		}
 		params += p.String()
 	}
-	out := "function(" + params + ")"
+	
+	out := ""
+	if af.Static {
+		out += "static "
+	}
+	out += "function(" + params + ")"
+
+	if af.ReturnType != nil {
+		out += ": " + af.ReturnType.String()
+	}
 
 	if len(af.UseClause) > 0 {
 		uses := ""
@@ -902,6 +1027,8 @@ func ToJSON(node Node) ([]byte, error) {
 		data["value"] = n.Value
 	case *BooleanLiteral:
 		data["value"] = n.Value
+	case *NullLiteral:
+		data["value"] = nil
 	case *ExpressionStatement:
 		data["expression"] = n.Expression
 	case *AssignmentExpression:
@@ -1027,10 +1154,30 @@ func ToJSON(node Node) ([]byte, error) {
 		data["body"] = n.Body
 	case *ThrowStatement:
 		data["expression"] = n.Expression
+	case *IncludeStatement:
+		data["path"] = n.Path
+		data["once"] = n.Once
+	case *RequireStatement:
+		data["path"] = n.Path
+		data["once"] = n.Once
+	case *IncludeExpression:
+		data["path"] = n.Path
+		data["once"] = n.Once
+	case *RequireExpression:
+		data["path"] = n.Path
+		data["once"] = n.Once
+	case *NullableType:
+		data["base_type"] = n.BaseType
 	case *AnonymousFunction:
+		if n.Static {
+			data["static"] = n.Static
+		}
 		data["parameters"] = n.Parameters
 		if len(n.UseClause) > 0 {
 			data["use_clause"] = n.UseClause
+		}
+		if n.ReturnType != nil {
+			data["return_type"] = n.ReturnType
 		}
 		data["body"] = n.Body
 	case *NamespacedIdentifier:

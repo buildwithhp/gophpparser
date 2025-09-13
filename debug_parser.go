@@ -250,6 +250,10 @@ func getTokenTypeName(tokenType TokenType) string {
 		return "INSTANCEOF"
 	case MAGIC_CONSTANT:
 		return "MAGIC_CONSTANT"
+	case COMMENT:
+		return "COMMENT"
+	case DOCBLOCK:
+		return "DOCBLOCK"
 	default:
 		return fmt.Sprintf("UNKNOWN_TOKEN(%d)", int(tokenType))
 	}

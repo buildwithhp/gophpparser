@@ -1,5 +1,7 @@
 package gophpparser
 
+import "strings"
+
 type Lexer struct {
 	input        string
 	position     int
@@ -60,7 +62,14 @@ func (l *Lexer) NextToken() Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = Token{Type: EQ, Literal: string(ch) + string(l.ch), Line: l.line, Column: l.column}
+			// Check for === (strict equality)
+			if l.peekChar() == '=' {
+				secondCh := l.ch
+				l.readChar()
+				tok = Token{Type: STRICT_EQ, Literal: string(ch) + string(secondCh) + string(l.ch), Line: l.line, Column: l.column}
+			} else {
+				tok = Token{Type: EQ, Literal: string(ch) + string(l.ch), Line: l.line, Column: l.column}
+			}
 		} else if l.peekChar() == '>' {
 			ch := l.ch
 			l.readChar()
@@ -88,8 +97,20 @@ func (l *Lexer) NextToken() Token {
 		tok = newToken(MULTIPLY, l.ch, l.line, l.column)
 	case '/':
 		if l.peekChar() == '/' {
-			l.skipComment()
-			return l.NextToken()
+			tok.Type = COMMENT
+			tok.Literal = l.readLineComment()
+			tok.Line = l.line
+			tok.Column = l.column
+		} else if l.peekChar() == '*' {
+			comment := l.readBlockComment()
+			if strings.HasPrefix(comment, "/**") {
+				tok.Type = DOCBLOCK
+			} else {
+				tok.Type = COMMENT
+			}
+			tok.Literal = comment
+			tok.Line = l.line
+			tok.Column = l.column
 		} else {
 			tok = newToken(DIVIDE, l.ch, l.line, l.column)
 		}
@@ -101,7 +122,14 @@ func (l *Lexer) NextToken() Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = Token{Type: NOT_EQ, Literal: string(ch) + string(l.ch), Line: l.line, Column: l.column}
+			// Check for !== (strict not equal)
+			if l.peekChar() == '=' {
+				secondCh := l.ch
+				l.readChar()
+				tok = Token{Type: STRICT_NOT_EQ, Literal: string(ch) + string(secondCh) + string(l.ch), Line: l.line, Column: l.column}
+			} else {
+				tok = Token{Type: NOT_EQ, Literal: string(ch) + string(l.ch), Line: l.line, Column: l.column}
+			}
 		} else {
 			tok = newToken(NOT, l.ch, l.line, l.column)
 		}
@@ -335,4 +363,35 @@ func (l *Lexer) skipComment() {
 			l.readChar()
 		}
 	}
+}
+
+func (l *Lexer) readLineComment() string {
+	position := l.position
+	for l.ch != '\n' && l.ch != 0 {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func (l *Lexer) readBlockComment() string {
+	position := l.position
+	l.readChar() // skip '*'
+	l.readChar() // start reading content
+	
+	for {
+		if l.ch == 0 {
+			break
+		}
+		if l.ch == '*' && l.peekChar() == '/' {
+			l.readChar() // read '*'
+			l.readChar() // read '/'
+			break
+		}
+		if l.ch == '\n' {
+			l.line++
+			l.column = 0
+		}
+		l.readChar()
+	}
+	return l.input[position:l.position]
 }
